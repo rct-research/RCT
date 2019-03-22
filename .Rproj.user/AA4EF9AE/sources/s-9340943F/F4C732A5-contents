@@ -1,0 +1,76 @@
+#evaluate the tail probability of N(0,1): P(Z>a) using importance sampling 
+a = 8
+#Try a = 5; a = 8
+
+n = 1000
+
+#target: 1-pnorm(2)= 0.02275013
+#target: 1-pnorm(5)=  2.866516e-07
+#target: 1-pnorm(8)= 6.661338e-16
+
+
+#----------------------------------------------------------
+#graphical illustration for a=2:
+par(mfcol=c(1,1))
+curve(dnorm(x),0,5,ylim=c(0,1), lwd=2)
+curve(dt(x,df=1), 0, 5, add=T, col=2, lwd=2)
+curve(dnorm(x,mean=a), 0, 5, add=T, col=3, lwd=2)
+curve(dexp(x-a),a,5,col=4,add=T, lwd=2)
+abline(v=a, lwd=2, lty=2)
+legend("topright",legend=c("N(0,1)","t(1)","N(2,1)","2+Exp(1)"), col=1:4, lty=1, lwd=2, cex=1.2)
+
+#target tail probability:
+x.tmp = seq(a,5,by=0.01)
+y.tmp = c(0,dnorm(x.tmp),0)
+x.tmp = c(a,x.tmp,a)
+polygon(x.tmp,y.tmp, col = "orange")
+
+#------------------------------------------
+#simple Monte Carlo est.:
+x = rnorm(n)
+y = as.numeric(x>a)
+c(mean(y),sd(y)/sqrt(n))
+hist(y)
+
+#importance sampling using t(1):
+x = rt(n,df=1)
+weight1 = dnorm(x)/dt(x,df=1)
+y1 = (x>a)*weight1
+hist(y1)
+c(mean(y1),sd(y1)/sqrt(n))
+w1 = weight1/sum(weight1)
+hist(w1)
+
+
+#importance sampling using N(a,1):
+x = rnorm(n,mean=a)
+weight2 = dnorm(x)/dnorm(x,mean=a)
+y2 = (x>a)*weight2
+hist(y2)
+c(mean(y2),sd(y2)/sqrt(n))
+w2 = weight2/sum(weight2)
+hist(w2)
+
+
+#importance sampling using a+Exp(1):
+x = a+rexp(n)
+weight3 = dnorm(x)/dexp(x-a)
+y3 = (x>a)*weight3
+hist(y3)
+c(mean(y3),sd(y3)/sqrt(n))
+w3 = weight3/sum(weight3)
+hist(w3)
+
+#----------------------------------------------------------
+#summary comparison:
+par(mfcol=c(1,2))
+boxplot(cbind(y,y1,y2,y3))
+boxplot(cbind(y,y1,y2,y3),ylim=c(0,0.1))
+boxplot(cbind(1/n,w1,w2,w3))
+boxplot(cbind(1/n,w1,w2,w3),ylim=c(0,0.01))
+
+data.frame(MC.est=apply(cbind(y,y1,y2,y3),2,mean),MC.sd=apply(cbind(y,y1,y2,y3),2,sd)/sqrt(n))
+1-pnorm(a)
+
+
+

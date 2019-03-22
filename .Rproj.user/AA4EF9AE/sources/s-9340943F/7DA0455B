@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1553227916062.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "50|13|73|1|\n74|42|83|0|\n84|23|186|21|\n187|14|208|0|\n211|44|225|0|\n227|44|241|0|\n243|23|253|0|\n",
+    "hash" : "3665364334",
+    "id" : "7DA0455B",
+    "lastKnownWriteTime" : 1553234983,
+    "last_content_update" : 1553234983672,
+    "path" : "~/Documents/💪Predicting /function.R",
+    "project_path" : "function.R",
+    "properties" : {
+        "cursorPosition" : "281,0",
+        "scrollLine" : "264"
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

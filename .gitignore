@@ -1,0 +1,9 @@
+# Untracked files:
+/others
+/Mazar et al. (2008)
+
+# Untracked pattern:
+*.pdf
+.Rhistory
+.RData
+*.Rproj

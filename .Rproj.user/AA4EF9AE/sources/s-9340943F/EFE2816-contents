@@ -1,0 +1,115 @@
+library(ggplot2)
+n = 1000
+u = runif(n)
+
+#Hw1-1
+theta = 3
+beta=5
+x = theta*(-log(1-u))^(1/beta)
+hist(x,probability=T,100)
+a = seq(0,10,by=0.01)
+lines(a,(beta/theta)*(a/theta)^(beta-1)*exp(-(a/theta)^beta),col=2,lwd=2)
+
+#Hw1-2
+theta = 1
+beta=8
+x = theta*(1-u)^(-1/beta)-1
+hist(x,probability=T,100)
+a = seq(0, 5, by=0.01)
+lines(a, beta/(theta*(1+a/theta)^(beta+1)), col=2, lwd=2)
+
+#hw1-3
+gamma = 0.7
+f3 = function(x){
+  2/(gamma+1/gamma)*dnorm(x*gamma^-sign(x))
+}
+curve(f3(x), -3,3)
+abline(v=0, lty=2)
+g3=function(x){
+  dnorm(x,0,1/gamma)
+}
+M=2/(gamma^2+1)
+curve(M*g3(x),-3,3,add=T,col=2)
+
+1/M
+#rejection sampling:
+n = 1000
+u = runif(n)
+
+#proposal 1: U(0,1)
+y3=rnorm(n,0,1/gamma)
+a = seq(-6, 5, by=0.01)
+x = y3[u <= f3(y3)/(M*g3(y3))]
+hist(x,20,probability=T)
+lines(a,f3(a), col=2, lwd=2)
+length(x)/n
+1/M
+#hw1-4
+alpha=1.5
+f4 = function(x){
+  2*dt(x,df=1)*pt(alpha*x,df=1)
+}
+curve(f4(x), -3,3)
+#indep MH:
+f.proposal <- function(x){
+  dt(x,df=3)  
+}
+curve(f.proposal(x), -3,3,add=T,col=2, lwd=2)
+
+m <- 10000 
+x <- succ <- numeric(m) 
+
+x[1] <- 10 
+for(i in 2:m) { 
+  x[i] <- rt(1,df=3) 
+  r <- f4(x[i])/f4(x[i-1])* f.proposal(x[i-1])/f.proposal(x[i]) 
+  succ[i] <- rbinom(n=1,size=1,prob=min(r,1)) 
+  if(succ[i]==0) x[i] <- x[i-1] #not move
+} 
+mean(x); var(x) 
+mean(succ) 
+
+par(mfcol=c(2,2))
+plot(x[1:500],type="l")
+acf(x)
+hist(x[-(1:1000)], 200, prob=T)
+curve(f4(x), lwd=2, add=TRUE, col=3)
+
+#hw1-5
+n = 1000
+u = runif(n)
+f5=function(x,y){
+  2*(1-x)*(1-y)*(1-x*y)^(-3)
+}
+curve(f5(x,y = 0), from=0,to=1, , ylim = c(0,3.5),col=2, lwd=2)
+for(i in seq(0, 1, 0.1)){
+  curve(f5(x, y = i), from=0,to=1,
+        add = T,col=2, lwd=2)
+}
+g3=function(x){
+  dunif(x,0,1)}
+datax=c()
+datay=c()
+Ms=c()
+count=1
+for(i in 1:1000){
+  x = runif(1)
+  u = runif(1)
+  datax=c(datax,x)
+  M=max(sapply(seq(0,1,0.01), f5, x=x))
+  Ms=c(Ms,1/M)
+  y = runif(1)
+  while ((u > f5(x,y)/M*1)){
+    y = runif(1)
+    u = runif(1)
+    count=count+1
+  }
+  datay=c(datay,y)
+}
+mean(Ms)
+hist(datay)
+length(datay)
+ggplot(data = data.frame(x=datax,y=datay))+
+  aes(x=x,y=y)+
+  geom_point()
+1000/count

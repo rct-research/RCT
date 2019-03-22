@@ -1,0 +1,191 @@
+#Demo MCMC for Poisson Regression Model:
+#--------------------------------------------------------------
+# Please install R-pkg: coda for later plot and covergence checking 
+install.packages("coda")
+library(coda)
+#--------------------------------------------------------------
+
+set.seed(2018)
+x = rnorm(100)
+para = c(1,0.5)
+
+lambda = exp(para[1]+para[2]*x)
+y = rpois(100,lambda)
+
+plot(x,y)
+
+#log(sampling pdf) using beta parametereization
+f1 = function(y,x,para){
+     lambda = exp(para[1]+para[2]*x)
+     sum(dpois(y,lambda,log=TRUE))
+}
+
+#gamma prior on alpha=exp(beta):
+f.prior1 = function(para){
+      a = 2
+      b = 0.5
+      alpha = exp(para)
+      prod(dgamma(alpha,shape=a,rate=b))
+}
+
+#normal prior on beta:
+f.prior2 = function(para){
+      tau = 10
+      prod(dnorm(para,mean=0,sd=tau))
+}
+
+#MCMC steps:
+m = 3000
+beta.mcmc = matrix(0,m,2)
+beta.mcmc[1,] = c(0,0) #try different initials
+move = c()
+
+#------------------------------------------------------------
+#RW-MH: 
+MH.sd=0.1
+
+for (i in 2:m){
+    beta.mcmc[i,] = rnorm(2,mean=beta.mcmc[i-1,],sd=MH.sd)
+    r = exp(f1(y,x,beta.mcmc[i,])-f1(y,x,beta.mcmc[i-1,]))
+    r = r*f.prior1(beta.mcmc[i,])/f.prior1(beta.mcmc[i-1,])
+    move[i] = rbinom(1,1,prob=min(r,1))
+    if (move[i]==0) beta.mcmc[i,] = beta.mcmc[i-1,]
+}
+
+#Summary:
+mean(move[-1])
+
+par(mfcol=c(2,1)) 
+for (i in 1:2){ts.plot(beta.mcmc[,i])} #mcmc draws
+par(mfcol=c(1,1)) 
+acf(beta.mcmc) #dependence between draws
+
+#use functions in coda:
+chain1 = mcmc(beta.mcmc)
+plot(chain1)
+summary(chain1)
+
+
+#run another mcmc using different initial values (called it chain2)
+beta.mcmc[1,] = c(2,-2) #try different initials
+move = c()
+
+for (i in 2:m){
+  beta.mcmc[i,] = rnorm(2,mean=beta.mcmc[i-1,],sd=MH.sd)
+  r = exp(f1(y,x,beta.mcmc[i,])-f1(y,x,beta.mcmc[i-1,]))
+  r = r*f.prior1(beta.mcmc[i,])/f.prior1(beta.mcmc[i-1,])
+  move[i] = rbinom(1,1,prob=min(r,1))
+  if (move[i]==0) beta.mcmc[i,] = beta.mcmc[i-1,]
+}
+
+mean(move[-1])
+chain2 = mcmc(beta.mcmc)
+plot(chain2)
+summary(chain2)
+
+
+#create multiple chains with different initials for checking convergence!!
+combinedchains = mcmc.list(chain1, chain2)
+plot(combinedchains)
+gelman.diag(combinedchains)
+gelman.plot(combinedchains)
+#gelman.plot(combinedchains,ylim=c(0.9,2)) #after 1000 iterations, the chains get stable!!
+
+
+
+#------------------------------------------------------------
+#If you try indep MH... 
+
+# use MLE to create proposal:  
+#fit = glm(y~x, family=poisson)
+#summary(fit)
+#fit$coeff.sd = sqrt(diag(summary(fit)$cov.unscaled))
+
+# use a naive estimate for beta to create proposal:
+fit = lm(log(y+0.5)~x)
+plot(x,log(y+1))
+abline(fit)
+#summary(fit)
+#fit$coeff.sd = sqrt(diag(summary(fit)$cov.unscaled))
+
+
+#MCMC steps:
+m = 3000
+beta.mcmc = matrix(0,m,2)
+beta.mcmc[1,] = c(0,0)
+move = c()
+
+MH.sd= 0.2 #try different values to see impact on rejection rate
+
+for (i in 2:m){
+  beta.mcmc[i,] = rnorm(2,mean=fit$coefficients,sd=MH.sd)
+  r = exp(f1(y,x,beta.mcmc[i,])-f1(y,x,beta.mcmc[i-1,])) 
+  r.proposal = prod(dnorm(beta.mcmc[i-1,],mean=fit$coefficients,sd=MH.sd))/prod(dnorm(beta.mcmc[i,],mean=fit$coefficients,sd=MH.sd))
+  r = r*r.proposal*f.prior2(beta.mcmc[i,])/f.prior2(beta.mcmc[i-1,])
+  move[i] = rbinom(1,1,prob=min(r,1))
+  if (move[i]==0) beta.mcmc[i,] = beta.mcmc[i-1,]
+}
+
+
+
+chain1 = mcmc(beta.mcmc)
+plot(chain1)
+summary(chain1)
+rejectionRate(chain1)
+#mean(move[-1])
+
+#another chain:
+beta.mcmc[1,] = c(2,-1)
+move = c()
+
+MH.sd= 0.2
+
+for (i in 2:m){
+  beta.mcmc[i,] = rnorm(2,mean=fit$coefficients,sd=MH.sd)
+  r = exp(f1(y,x,beta.mcmc[i,])-f1(y,x,beta.mcmc[i-1,]))
+  #for indep MH, we also need the ratio of proposal pdf in computing r (see next line) 
+  r.proposal = prod(dnorm(beta.mcmc[i-1,],mean=fit$coefficients,sd=MH.sd))/prod(dnorm(beta.mcmc[i,],mean=fit$coefficients,sd=MH.sd))
+  r = r*r.proposal*f.prior2(beta.mcmc[i,])/f.prior2(beta.mcmc[i-1,])
+  move[i] = rbinom(1,1,prob=min(r,1))
+  if (move[i]==0) beta.mcmc[i,] = beta.mcmc[i-1,]
+}
+
+chain2 = mcmc(beta.mcmc)
+plot(chain2)
+summary(chain2)
+rejectionRate(chain2)
+
+#create multiple chains with different initials for checking convergence!!
+combinedchains = mcmc.list(chain1, chain2)
+plot(combinedchains)
+gelman.plot(combinedchains)
+
+#gelman.plot(combinedchains,ylim=c(0.9,2)) 
+#raftery.diag(combinedchains, q=0.025)
+
+
+acf(beta.mcmc) #nearly uncorrelated beyond 10 iterations
+isub <- seq(1000,3000,by=15)
+chain3 = mcmc(beta.mcmc[isub,])
+
+ts.plot(chain3)
+acf(chain3)
+summary(chain3)
+
+apply(chain3,2,mean)+1.96*apply(chain3,2,sd)
+apply(chain3,2,mean)-1.96*apply(chain3,2,sd)
+
+HPDinterval(chain3, prob=0.95)
+
+
+#---------------------------------------------
+#using lattice to make plots:
+library(lattice)
+xyplot(chain3)
+densityplot(chain3)
+qqmath(chain3)
+
+xyplot(combinedchains) #also works for multiple chains
+densityplot(combinedchains)
+
+
