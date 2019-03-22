@@ -1,39 +1,63 @@
 ---
 title: "ReadMe"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      collapse: true
+      soomth_scroll: false
+    df_print: paged
+    number_sections: true
 ---
 
-#Original Data
+#Data
 Mazar et al. (2008)
-##DataFrame
-full_data:all data from 25 labs 
+
+##Data
+full_data: all data from 25 labs 
 full_data_select:
   remove other research variables 
   select Mazar research
-###Impute Data
+
+##Impute Data
 full_data_T:impute by treatment group mean
 full_data_C:impute by control group mean
 full_data_all:combine full_data_T/full_data_C
 
+#Data Exploration
+Mazar_Summary.R
+one lab significance:overall_significance.R
 
 #Model for RCT
 ##Linear regression
 
+0227_linear_model.R
+
+person_prediction_74.R
+treatment_73.R
+control_73.R
 ##Lasso regression
 
 #general function
 function.R
-#clean data and overall significance
-source('Mazar_summary.R')
-#overall significance
-source('overall_significance.R')
-#one lab significance
-source('significance.R')
+##variables summary
+each_variable
+##prediction function
+person_pred
+person_pred_both
+##plot 
+###outcome
+outcome_boxplot:actual and outcome
+outcome_hist:actual and outcome
+cor_plot_TC
+###error
+error_hist
+error_bar
+###impact 
+impact_bar_C
+impact_bar_T
+jitter
 
-#reg model
-#person_prediction_74.R
-#treatment_73.R
-#control_73.R
 
 
 

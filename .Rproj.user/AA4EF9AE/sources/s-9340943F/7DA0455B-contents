@@ -158,8 +158,7 @@ impact_bar_T<-function(df){
     theme(legend.position='none')
 }
 
-impact_plot_C(full_data_C)
-#plot-cor actual-pred
+#plot-cor actual-pred----
 cor_plot_TC<-function(df,Treatment=TRUE){
   if(Treatment==TRUE){
   a<-df %>%
@@ -184,28 +183,22 @@ cor_plot_TC<-function(df,Treatment=TRUE){
       labs(title=paste('Regression Error if control','correlation'))
   }
 }
-cor_plot(full_data_C)
-##########test----
-full_data_T%>% filter(lab.name=='Verschuere') %>%.[X]
-colnames(full_data_T)
-unique(full_data_T$tear)
-unique(full_data_C$maz.num.books)
-unique(full_data_select$sleep.hours)
-glimpse(full_data_select$sleep.hours)
-full_data$major=='Business (Exchange Student)'
-unique(full_data$lab.name)
-sapply(full_data_C,unique)[X]
-sapply(full_data_T, function(x) sum(is.na(x)))['num.boxes.correct']
-sum(is.na(full_data_T$hex43))
-length(unique(full_data_T$major%>%select(lab.name=='Verschuere')))
-full_data_C %>%
-  mutate(treat_error=(num.boxes-if_treat),lower = quantile(treat_error, probs = .025),upper = quantile(treat_error, probs = .975) )%>%
-  ggplot(aes(treat_error))+
-  geom_histogram(fill='grey')+
-  geom_vline(aes(xintercept=lower),linetype='dashed')+
-  geom_vline(aes(xintercept=upper),linetype='dashed')+
-  labs(title='Regression Error_if_Treatment')
-data23%>% filter(maz.prime.cond=='books') %>% select(num.commandments) %>% unique(.)
+#jitter plot for impact: if treat, if control----
+# Tgroup
+ggplot(data=full_data_T, aes(x=if_treat, y=if_control,col=abs(if_treat-if_control)>=2))+
+  geom_jitter(alpha=0.2)+
+  scale_color_manual(values=c("black", "red"),name='difference >=2')+
+  ggtitle('Prediction difference for treatment subject')+
+  xlim(0,7)+
+  ylim(0,12)
+# Cgroup
+ggplot(data=full_data_C, aes(x=if_control, y=if_treat,col=abs(if_control-if_treat)>=2))+
+  geom_jitter(alpha=0.2)+
+  scale_color_manual(values=c("black", "red"),name='difference >=2')+
+  ggtitle('Prediction difference for control subject')+
+  xlim(0,7)+
+  ylim(0,12)
+
 
 ##function already improved----------
 #plot_prediction-hist
@@ -252,30 +245,26 @@ cor_plot<-function(df){
     geom_smooth(method = lm)+
     labs(title=paste('Regression Error','correlation',a))
 }
-#jitter plot for num.boxes, if treat----
-# Tgroup
-ggplot(data=full_data_T, aes(x=if_treat, y=num.boxes,col=abs(if_treat-num.boxes)>=8))+
-  geom_jitter(alpha=0.2)+
-  scale_color_manual(values=c("black", "red"),name='Outliers >=8')+
-  ggtitle('Actual & Treatment Prediction for treatment subject')
-# Cgroup
-ggplot(data=full_data_C, aes(x=if_control, y=num.boxes,col=abs(if_control-num.boxes)>=8))+
-  geom_jitter(alpha=0.2)+
-  scale_color_manual(values=c("black", "red"),name='Outliers >=8')+
-  ggtitle('Actual & COntrol Prediction for control subject')
 
-#jitter plot for impact: if treat, if control----
-# Tgroup
-ggplot(data=full_data_T, aes(x=if_treat, y=if_control,col=abs(if_treat-if_control)>=2))+
-  geom_jitter(alpha=0.2)+
-  scale_color_manual(values=c("black", "red"),name='difference >=2')+
-  ggtitle('Prediction difference for treatment subject')+
-  xlim(0,7)+
-  ylim(0,12)
-# Cgroup
-ggplot(data=full_data_C, aes(x=if_control, y=if_treat,col=abs(if_control-if_treat)>=2))+
-  geom_jitter(alpha=0.2)+
-  scale_color_manual(values=c("black", "red"),name='difference >=2')+
-  ggtitle('Prediction difference for control subject')+
-  xlim(0,7)+
-  ylim(0,12)
+##########test----
+full_data_T%>% filter(lab.name=='Verschuere') %>%.[X]
+colnames(full_data_T)
+unique(full_data_T$tear)
+unique(full_data_C$maz.num.books)
+unique(full_data_select$sleep.hours)
+glimpse(full_data_select$sleep.hours)
+full_data$major=='Business (Exchange Student)'
+unique(full_data$lab.name)
+sapply(full_data_C,unique)[X]
+sapply(full_data_T, function(x) sum(is.na(x)))['num.boxes.correct']
+sum(is.na(full_data_T$hex43))
+length(unique(full_data_T$major%>%select(lab.name=='Verschuere')))
+full_data_C %>%
+  mutate(treat_error=(num.boxes-if_treat),lower = quantile(treat_error, probs = .025),upper = quantile(treat_error, probs = .975) )%>%
+  ggplot(aes(treat_error))+
+  geom_histogram(fill='grey')+
+  geom_vline(aes(xintercept=lower),linetype='dashed')+
+  geom_vline(aes(xintercept=upper),linetype='dashed')+
+  labs(title='Regression Error_if_Treatment')
+data23%>% filter(maz.prime.cond=='books') %>% select(num.commandments) %>% unique(.)
+
